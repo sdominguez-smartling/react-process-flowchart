@@ -7,8 +7,8 @@ import DecisionStep from "./DecisionStep";
 import Connector from "./Connector";
 
 // Types
-import { encodedNodeType } from "../../config";
 import { NodeTileT, ColEntry, AddNodeParams } from "../types/workflowVisTypes";
+import { encodedNodeType, WorkflowStepT } from "../../config";
 
 // Utils
 import { decodeMatrixEntry, isConnector } from "../utils/workflowVisUtils";
@@ -18,6 +18,10 @@ interface PropsT {
     editMode: boolean;
     addNodeParams: AddNodeParams;
 }
+
+const shouldHighlight = ({
+    stepUid, highlightedSteps }: { stepUid: string; highlightedSteps: HighlightedStep[] }
+) => highlightedSteps.includes(stepUid);
 
 export default class Column extends React.PureComponent<PropsT> {
     static renderTile({ colEntry, editMode, addNodeParams }: {
@@ -72,7 +76,16 @@ export default class Column extends React.PureComponent<PropsT> {
 
         // Decision Step
         if (tile.type === encodedNodeType.fork) {
-            return <DecisionStep />;
+            return <DecisionStep
+              workflowStepUid={tile.id}
+              workflowStepName={tile.name}
+              workflowUid={tile.workflowUid}
+              nextSteps={tile.nextSteps}
+              displayWarning={tile.displayWarning}
+              shouldHighlight={
+                  shouldHighlight({ stepUid: tile.id, highlightedSteps })
+              }
+            />;
         }
 
         // WorkflowStep
@@ -93,11 +106,9 @@ export default class Column extends React.PureComponent<PropsT> {
     }
 
     render() {
-        const { colEntries, editMode, addNodeParams } = this.props;
-
+      const { colEntries, editMode, addNodeParams } = this.props;
         return colEntries.map((colEntry: ColEntry) => (
             <div key={colEntry.matrixEntry}>
-                {Column.renderTile({ colEntry, editMode, addNodeParams })}
             </div>
         ));
     }
